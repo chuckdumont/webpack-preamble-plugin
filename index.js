@@ -67,6 +67,7 @@ module.exports = class PreamblePlugin {
         const source = new ConcatSource();
         contents.forEach((entry) => {
           source.add(new OriginalSource(entry.data, entry.source));
+          source.add('\n');
         });
         source.add(src);
         return source;
@@ -74,7 +75,7 @@ module.exports = class PreamblePlugin {
 
       compilation.mainTemplate.plugin("hash", (hash) => {
         hash.update("PreamblePlugin ");
-        hash.update("3");   // Increment this whenever the render code above changes
+        hash.update("4");   // Increment this whenever the render code above changes
         contents.forEach((entry) => {
           hash.update(entry.source);
         });

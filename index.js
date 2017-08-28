@@ -70,7 +70,6 @@ module.exports = class PreamblePlugin {
           source.add('\n');
         });
         source.add(src);
-        source.add('\n');
         return source;
       });
 

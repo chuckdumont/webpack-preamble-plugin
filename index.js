@@ -1,5 +1,6 @@
 /*
- * (C) Copyright IBM Corp. 2012, 2016 All Rights Reserved.
+ * (C) Copyright HCL Technologies Ltd. 2018
+ * (C) Copyright IBM Corp. 2012, 2017 All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,50 +37,63 @@ const fs = require('fs');
 const async = require('async');
 const ConcatSource = require("webpack-sources").ConcatSource;
 const OriginalSource = require("webpack-sources").OriginalSource;
+const {tap} = require("webpack-plugin-compat").for("webpack-preamble-plugin");
 
 module.exports = class PreamblePlugin {
-  constructor(options) {
-    this.options = options;
-  }
-  apply(compiler) {
-    const contents = [];
+	constructor(options) {
+		this.options = options;
+	}
+	apply(compiler) {
+		const contents = [];
 
-    compiler.plugin("make", (compilation__, callback) => {
-      async.eachOf(this.options && this.options.files || [], (elem, i, cb) => {
-        compiler.resolvers.normal.resolve({}, compiler.context, elem, (err, file) => {
-          if (err) {
-            return cb(err);
-          }
-          fs.readFile(file, 'utf8', (error, data) => {
-            if (!error) {
-              contents[i] = {data: data, source: file};
-            }
-            cb(error);
-          });
-        });
-      }, (err) => {
-        callback(err);
-      });
-    });
+		tap(compiler, "make", (compilation__, callback) => {
+			this.getResolver(compiler, resolver => {
+				async.eachOf(this.options && this.options.files || [], (elem, i, cb) => {
+					resolver.resolve({}, compiler.context, elem, (err, file) => {
+						if (err) {
+							return cb(err);
+						}
+						fs.readFile(file, 'utf8', (error, data) => {
+							if (!error) {
+								contents[i] = {data: data, source: file};
+							}
+							cb(error);
+						});
+					});
+				}, (err) => {
+					callback(err);
+				});
+			});
+		});
 
-    compiler.plugin("compilation", (compilation) => {
-      compilation.mainTemplate.plugin("render", (src) => {
-        const source = new ConcatSource();
-        contents.forEach((entry) => {
-          source.add(new OriginalSource(entry.data, entry.source));
-          source.add('\n');
-        });
-        source.add(src);
-        return source;
-      });
+		tap(compiler, "compilation", (compilation) => {
+			compilation.mainTemplate.plugin("render", (src) => {
+				const source = new ConcatSource();
+				contents.forEach((entry) => {
+					source.add(new OriginalSource(entry.data, entry.source));
+					source.add('\n');
+				});
+				source.add(src);
+				return source;
+			});
 
-      compilation.mainTemplate.plugin("hash", (hash) => {
-        hash.update("PreamblePlugin ");
-        hash.update("4");   // Increment this whenever the render code above changes
-        contents.forEach((entry) => {
-          hash.update(entry.source);
-        });
-      });
-    });
-  }
+			tap(compilation.mainTemplate, "hash", (hash) => {
+				hash.update("PreamblePlugin ");
+				hash.update("4");   // Increment this whenever the render code above changes
+				contents.forEach((entry) => {
+					hash.update(entry.source);
+				});
+			});
+		});
+	}
+
+	getResolver(compiler, callback) {
+		if (compiler.resolverFactory) {
+			// Webpack V4
+			tap(compiler.resolverFactory, "resolver normal", callback);
+		} else {
+			// Webpack V3
+			callback(compiler.resolvers.normal);
+		}
+	}
 };

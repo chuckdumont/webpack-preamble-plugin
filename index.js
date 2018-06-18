@@ -67,7 +67,7 @@ module.exports = class PreamblePlugin {
 		});
 
 		tap(compiler, "compilation", (compilation) => {
-			compilation.mainTemplate.plugin("render", (src) => {
+			tap(compilation.mainTemplate, "render", (src) => {
 				const source = new ConcatSource();
 				contents.forEach((entry) => {
 					source.add(new OriginalSource(entry.data, entry.source));

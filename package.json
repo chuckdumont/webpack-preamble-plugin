@@ -1,6 +1,6 @@
 {
   "name": "webpack-preamble-plugin",
-  "version": "1.0.1",
+  "version": "1.0.2-0",
   "peerDependencies": {
     "webpack": ">= 2.2.0"
   },
@@ -8,5 +8,11 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chuckdumont/webpack-preamble-plugin.git"
+  },
+  "dependencies": {
+    "async": "^2.6.1",
+    "fs": "0.0.1-security",
+    "webpack-plugin-compat": "^1.0.1",
+    "webpack-sources": "^1.1.0"
   }
 }

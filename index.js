@@ -49,7 +49,7 @@ module.exports = class PreamblePlugin {
 		tap(compiler, "make", (compilation__, callback) => {
 			this.getResolver(compiler, resolver => {
 				async.eachOf(this.options && this.options.files || [], (elem, i, cb) => {
-					resolver.resolve({}, compiler.context, elem, {}, (err, file) => {
+					const resolverCb = (err, file) => {
 						if (err) {
 							return cb(err);
 						}
@@ -59,7 +59,12 @@ module.exports = class PreamblePlugin {
 							}
 							cb(error);
 						});
-					});
+					};
+					if (compiler.resolverFactory) {
+						resolver.resolve({}, compiler.context, elem, {}, resolverCb);
+					} else {
+						resolver.resolve({}, compiler.context, elem, resolverCb);
+					}
 				}, (err) => {
 					callback(err);
 				});

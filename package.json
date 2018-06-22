@@ -1,6 +1,6 @@
 {
   "name": "webpack-preamble-plugin",
-  "version": "1.0.2-0",
+  "version": "1.0.2",
   "peerDependencies": {
     "webpack": ">= 2.2.0"
   },

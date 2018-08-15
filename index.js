@@ -93,12 +93,17 @@ module.exports = class PreamblePlugin {
 	}
 
 	getResolver(compiler, callback) {
-		if (compiler.resolverFactory) {
+		if (this.resolver) {
+			callback(this.resolver);
+		}
+		else if (compiler.resolverFactory) {
 			// Webpack V4
-			tap(compiler.resolverFactory, "resolver normal", callback);
+			tap(compiler.resolverFactory, "resolver normal", resolver => {
+				callback(this.resolver = resolver);
+			});
 		} else {
 			// Webpack V3
-			callback(compiler.resolvers.normal);
+			callback(this.resolver = compiler.resolvers.normal);
 		}
 	}
 };
